@@ -7,7 +7,7 @@ if __name__ == "__main__":
     bcn = LoadAirportStructure("Terminals.txt")
 
     if bcn is None:
-        print("No se pudo cargar. Comprueba que Terminals.txt esta en la carpeta.")
+        print("No se pudo cargar.")
     else:
         print("Aeropuerto cargado: " + bcn.code)
         print("Numero de terminales: " + str(len(bcn.terminals)))
@@ -26,7 +26,7 @@ if __name__ == "__main__":
             i = i + 1
 
         # Test 2: asignar gates
-        # Usamos Aircraft(aircraft, company, origin, time) igual que tu clase
+        # Usamos Aircraft(aircraft, company, origin, time)
         print("\nTest 2: Asignar gates a vuelos de prueba")
         vuelo1 = Aircraft("ECMKV", "VLG", "LYBE", "00:04")
         vuelo2 = Aircraft("EIDPG", "RYR", "EGCC", "04:57")
@@ -69,4 +69,4 @@ if __name__ == "__main__":
             print("Grafica generada correctamente")
             plt.show()
 
-    print("\n=== FIN TEST ===")
+
