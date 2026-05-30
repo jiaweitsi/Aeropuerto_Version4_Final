@@ -298,6 +298,274 @@ def PlotGates(bcn):
     plt.tight_layout()
     return fig
 
+# -------------------------------------------------------
+# FUNCIONES VERSION 4
+# -------------------------------------------------------
+
+def AssignNightGates(bcn, aircrafts):
+    # Asigna gates a los aviones nocturnos (solo tienen salida, sin llegada)
+    # Devuelve -1 si la lista esta vacia
+
+    if len(aircrafts) == 0:
+        print("Error: la lista esta vacia")
+        return -1
+
+    i = 0
+    while i < len(aircrafts):
+        ac = aircrafts[i]
+        # Solo procesamos aviones sin hora de llegada (nocturnos)
+        if ac.time == "" and ac.departure_time != "":
+            AssignGate(bcn, ac)
+        i = i + 1
 
 
+def FreeGate(bcn, aircraft_id):
+    # Libera el gate ocupado por el avion con el ID recibido
+    # Devuelve 0 si lo encuentra, -1 si no
 
+    encontrado = False
+
+    i = 0
+    while i < len(bcn.terminals) and not encontrado:
+        terminal = bcn.terminals[i]
+
+        j = 0
+        while j < len(terminal.boarding_areas) and not encontrado:
+            area = terminal.boarding_areas[j]
+
+            k = 0
+            while k < len(area.gates) and not encontrado:
+                gate = area.gates[k]
+
+                if gate.occupied and gate.aircraft_id == aircraft_id:
+                    gate.occupied = False
+                    gate.aircraft_id = None
+                    encontrado = True
+
+                k = k + 1
+            j = j + 1
+        i = i + 1
+
+    if encontrado:
+        return 0
+    else:
+        print("Avion no encontrado en ningun gate:", aircraft_id)
+        return -1
+
+
+def AssignGatesAtTime(bcn, aircrafts, time):
+    # Recibe el aeropuerto, la lista de aviones y una hora (ej: "08:00")
+    # Primero libera los gates de aviones que ya han salido antes de esa hora
+    # Luego asigna gates a los aviones que aterrizan en esa hora
+    # Devuelve el numero de aviones que no pudieron ser asignados
+
+    # Convertimos la hora recibida a minutos
+    partes_time = time.split(":")
+    hora_actual = int(partes_time[0])
+    min_actual = int(partes_time[1])
+    total_actual = hora_actual * 60 + min_actual
+    total_fin = total_actual + 60  # fin del periodo de una hora
+
+    # Paso 1: liberar gates de aviones que ya han salido
+    i = 0
+    while i < len(aircrafts):
+        ac = aircrafts[i]
+
+        if ac.departure_time != "":
+            partes_dep = ac.departure_time.split(":")
+            hora_dep = int(partes_dep[0])
+            min_dep = int(partes_dep[1])
+            total_dep = hora_dep * 60 + min_dep
+
+            # Si el avion sale antes del inicio del periodo, liberamos su gate
+            if total_dep <= total_actual:
+                FreeGate(bcn, ac.aircraft)
+
+        i = i + 1
+
+    # Paso 2: asignar gates a los que llegan en este periodo
+    no_asignados = 0
+
+    i = 0
+    while i < len(aircrafts):
+        ac = aircrafts[i]
+
+        if ac.time != "":
+            partes_arr = ac.time.split(":")
+            hora_arr = int(partes_arr[0])
+            min_arr = int(partes_arr[1])
+            total_arr = hora_arr * 60 + min_arr
+
+            # Si llega dentro del periodo de una hora
+            if total_actual <= total_arr < total_fin:
+                resultado = AssignGate(bcn, ac)
+                if resultado == -1:
+                    no_asignados = no_asignados + 1
+
+        i = i + 1
+
+    return no_asignados
+
+
+def PlotDayOccupancy(bcn, aircrafts):
+    # Muestra un grafico con la ocupacion de gates por terminal en cada hora del dia
+    # y el numero de aviones no asignados por hora
+
+    import matplotlib.pyplot as plt
+
+    # Preparamos listas para guardar datos por hora
+    horas = []
+    h = 0
+    while h < 24:
+        horas.append(h)
+        h = h + 1
+
+    # Una lista de ocupacion por terminal
+    num_terminals = len(bcn.terminals)
+
+    # Creamos una lista de listas: ocupacion[terminal][hora]
+    ocupacion = []
+    t = 0
+    while t < num_terminals:
+        lista_horas = [0] * 24
+        ocupacion.append(lista_horas)
+        t = t + 1
+
+    no_asignados_por_hora = [0] * 24
+
+    # Simulamos hora a hora
+    h = 0
+    while h < 24:
+        # Formateamos la hora como string "hh:00"
+        if h < 10:
+            hora_str = "0" + str(h) + ":00"
+        else:
+            hora_str = str(h) + ":00"
+
+        no_asig = AssignGatesAtTime(bcn, aircrafts, hora_str)
+        no_asignados_por_hora[h] = no_asig
+
+        # Contamos gates ocupados por terminal
+        t = 0
+        while t < num_terminals:
+            terminal = bcn.terminals[t]
+            gates_ocupados = 0
+
+            a = 0
+            while a < len(terminal.boarding_areas):
+                area = terminal.boarding_areas[a]
+                g = 0
+                while g < len(area.gates):
+                    if area.gates[g].occupied:
+                        gates_ocupados = gates_ocupados + 1
+                    g = g + 1
+                a = a + 1
+
+            ocupacion[t][h] = gates_ocupados
+            t = t + 1
+
+        h = h + 1
+
+    # Dibujamos el grafico
+    fig, ax = plt.subplots(figsize=(12, 5))
+
+    colores = ['blue', 'orange', 'green', 'red', 'purple']
+
+    t = 0
+    while t < num_terminals:
+        color = colores[t % len(colores)]
+        ax.plot(horas, ocupacion[t], label="Terminal " + bcn.terminals[t].name,
+                color=color, marker='o')
+        t = t + 1
+
+    ax.bar(horas, no_asignados_por_hora, alpha=0.3, color='red', label='No asignados')
+
+    ax.set_title("Ocupacion de gates por hora del dia")
+    ax.set_xlabel("Hora del dia")
+    ax.set_ylabel("Gates ocupados / no asignados")
+    ax.set_xticks(horas)
+    ax.legend()
+    plt.tight_layout()
+
+    return fig
+
+#======FUNCIONES EXTRAS======
+# -------------------------------------------------------
+# FUNCIÓN SIMULACIÓN - Añadir al final de LEBL.py
+# -------------------------------------------------------
+
+def GetGateStateAtTime(bcn, aircrafts, time_str):
+    """
+    Devuelve el estado de todos los gates en un momento dado,
+    SIN modificar el estado real del aeropuerto.
+    Devuelve: lista de (terminal, area, gate_name, occupied, aircraft_id)
+    y el número de aviones presentes en ese instante.
+    """
+    partes = time_str.split(":")
+    hora_actual = int(partes[0])
+    min_actual = int(partes[1])
+    total_actual = hora_actual * 60 + min_actual
+
+    # Reset temporal de todos los gates
+    i = 0
+    while i < len(bcn.terminals):
+        j = 0
+        while j < len(bcn.terminals[i].boarding_areas):
+            k = 0
+            while k < len(bcn.terminals[i].boarding_areas[j].gates):
+                bcn.terminals[i].boarding_areas[j].gates[k].occupied = False
+                bcn.terminals[i].boarding_areas[j].gates[k].aircraft_id = None
+                k += 1
+            j += 1
+        i += 1
+
+    # Asignar solo aviones que están en tierra en este instante
+    aviones_presentes = 0
+    i = 0
+    while i < len(aircrafts):
+        ac = aircrafts[i]
+
+        if ac.time != "":
+            p = ac.time.split(":")
+            total_arr = int(p[0]) * 60 + int(p[1])
+        else:
+            total_arr = -1  # avion nocturno: ya estaba antes
+
+        if ac.departure_time != "":
+            p = ac.departure_time.split(":")
+            total_dep = int(p[0]) * 60 + int(p[1])
+        else:
+            total_dep = 9999  # no sale hoy
+
+        ya_llego = (total_arr == -1) or (total_arr <= total_actual)
+        no_salio = total_dep > total_actual
+
+        if ya_llego and no_salio:
+            AssignGate(bcn, ac)
+            aviones_presentes += 1
+
+        i += 1
+
+    # Recoger estado resultante
+    estado = []
+    i = 0
+    while i < len(bcn.terminals):
+        terminal = bcn.terminals[i]
+        j = 0
+        while j < len(terminal.boarding_areas):
+            area = terminal.boarding_areas[j]
+            k = 0
+            while k < len(area.gates):
+                gate = area.gates[k]
+                estado.append((
+                    terminal.name,
+                    area.name,
+                    gate.name,
+                    gate.occupied,
+                    gate.aircraft_id if gate.aircraft_id else "-"
+                ))
+                k += 1
+            j += 1
+        i += 1
+
+    return estado, aviones_presentes

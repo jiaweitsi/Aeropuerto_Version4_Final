@@ -48,10 +48,14 @@ def PrintAirport(airport):
 
 def ConvertirCordinadas(cord_str):
     sentido = cord_str[0]
+    numeros = cord_str[1:]  # quita la letra del principio
 
-    grados = float(cord_str[1:3])
-    minutos = float(cord_str[3:5])
-    segundos = float(cord_str[5:7])
+    # Los segundos son siempre los 2 últimos dígitos
+    # Los minutos son siempre los 2 anteriores
+    # Los grados son el resto
+    segundos = float(numeros[-2:])
+    minutos = float(numeros[-4:-2])
+    grados = float(numeros[:-4])
 
     decimal = grados + (minutos / 60.0) + (segundos / 3600.0)
 
@@ -59,7 +63,6 @@ def ConvertirCordinadas(cord_str):
         decimal = decimal * -1
 
     return decimal
-
 # ===== LOAD AIRPORTS =====
 def LoadAirports(filename):
     lista_airports = []
@@ -169,23 +172,56 @@ def PlotAirports(airports):
 
 def MapAirports(airports):
     f = open("airports_map.kml", "w")
-    f.write("<?xml version='1.0' encoding='UTF-8'?>\n")
-    f.write("<kml xmlns='http://www.opengis.net/kml/2.2'>\n")
+
+    # Cabecera del archivo KML - comillas dobles obligatorias para Google Earth
+    f.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
+    f.write("<kml xmlns=\"http://www.opengis.net/kml/2.2\">\n")
     f.write("<Document>\n")
 
-    for a in airports:
+    # Estilos: punto amarillo para Schengen, rojo para no Schengen
+    f.write("  <Style id=\"schengen\">\n")
+    f.write("    <IconStyle>\n")
+    f.write("      <color>ff00ffff</color>\n")
+    f.write("      <scale>1.0</scale>\n")
+    f.write("    </IconStyle>\n")
+    f.write("  </Style>\n")
+
+    f.write("  <Style id=\"noschengen\">\n")
+    f.write("    <IconStyle>\n")
+    f.write("      <color>ff0000ff</color>\n")
+    f.write("      <scale>1.0</scale>\n")
+    f.write("    </IconStyle>\n")
+    f.write("  </Style>\n")
+
+    # Un Placemark por cada aeropuerto
+    i = 0
+    while i < len(airports):
+        a = airports[i]
+        SetSchengen(a)
+
+        if a.schengen:
+            estilo = "schengen"
+        else:
+            estilo = "noschengen"
+
         f.write("  <Placemark>\n")
         f.write("    <name>" + a.code + "</name>\n")
-        # Ponemos una descripcion si es Schengen o no
-        estado = "Schengen" if a.schengen else "No Schengen"
-        f.write("    <description>" + estado + "</description>\n")
+
+        if a.schengen:
+            f.write("    <description>Schengen</description>\n")
+        else:
+            f.write("    <description>No Schengen</description>\n")
+
+        f.write("    <styleUrl>#" + estilo + "</styleUrl>\n")
         f.write("    <Point>\n")
-        # En KML primero va Longitud y luego Latitud
-        f.write("      <coordinates>" + str(a.lon) + "," + str(a.lat) + "</coordinates>\n")
+        # En KML el orden es: longitud, latitud
+        f.write("      <coordinates>" + str(a.lon) + "," + str(a.lat) + ",0</coordinates>\n")
         f.write("    </Point>\n")
         f.write("  </Placemark>\n")
+
+        i = i + 1
 
     f.write("</Document>\n")
     f.write("</kml>\n")
     f.close()
-    print("Archivo 'airports_map.kml' generado. Ábrelo con Google Earth.")
+    print("Archivo airports_map.kml generado.")
