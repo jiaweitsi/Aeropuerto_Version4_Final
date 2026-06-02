@@ -23,6 +23,7 @@ class Aircraft:
 # FUNCIONES VERSION 2
 # -------------------------------------------------------
 
+# ===== LOAD ARRIVALS  =====
 def LoadArrivals(filename):
     lista_arrivals = []
     try:
@@ -48,7 +49,7 @@ def LoadArrivals(filename):
         return []
     return lista_arrivals
 
-
+# ===== PLOT ARRIVALS  =====
 def PlotArrivals(aircrafts):
 
     if len(aircrafts) == 0:
@@ -79,7 +80,7 @@ def PlotArrivals(aircrafts):
     return fig
 
 
-
+# ===== SAVE FLIGHTS  =====
 def SaveFlights(aircrafts, filename):
     if len(aircrafts) == 0:
         print("No existeix la llista")
@@ -109,11 +110,7 @@ def SaveFlights(aircrafts, filename):
         return False
 
 
-# -------------------------------------------------------
-# CORRECCION PlotAirlines - va en aircraft.py
-# Reemplaza la funcion PlotAirlines existente
-# -------------------------------------------------------
-
+# ===== PLOT AIRLINES  =====
 def PlotAirlines(aircrafts):
     if len(aircrafts) == 0:
         print("No existeix la llista")
@@ -174,13 +171,14 @@ def PlotAirlines(aircrafts):
     plt.tight_layout()
     return fig
 
+# ===== PLOT FLIGHTS TYPE  =====
 def PlotFlightsType(aircrafts):
     if len(aircrafts) > 0:
         schengen = 0
         no_schengen = 0
 
         schengen_codes = ['LO', 'EB', 'LK', 'LC', 'EK', 'EE', 'EF', 'LF', 'ED', 'LG', 'EH', 'LH',
-                          'BI', 'LI', 'EV', 'EY', 'EL', 'LM', 'EN', 'EP', 'LP', 'LZ', 'LJ', 'LE', 'ES', 'LS']
+                          'BI', 'LI', 'EV', 'EY', 'EL', 'LM', 'EN', 'EP', 'LP', 'LZ', 'LJ', 'LE', 'ES', 'LS','GC']
 
         i = 0
         while i < len(aircrafts):
@@ -209,7 +207,7 @@ def PlotFlightsType(aircrafts):
     else:
         return None
 
-
+# ===== MAP FLIGHTS  =====
 def MapFlights(lista_arrivals, lista_airports):
     f = open("trayectorias.kml", "w")
 
@@ -239,7 +237,7 @@ def MapFlights(lista_arrivals, lista_airports):
     lon_bcn = 2.0832941
 
     schengen_codes = ['LO', 'EB', 'LK', 'LC', 'EK', 'EE', 'EF', 'LF', 'ED', 'LG', 'EH', 'LH',
-                      'BI', 'LI', 'EV', 'EY', 'EL', 'LM', 'EN', 'EP', 'LP', 'LZ', 'LJ', 'LE', 'ES', 'LS']
+                      'BI', 'LI', 'EV', 'EY', 'EL', 'LM', 'EN', 'EP', 'LP', 'LZ', 'LJ', 'LE', 'ES', 'LS','GC']
 
     i = 0
     while i < len(lista_arrivals):
@@ -291,7 +289,7 @@ def MapFlights(lista_arrivals, lista_airports):
     f.close()
     print("Archivo trayectorias.kml generado.")
 
-
+# ===== LONG FLIGHT ARRIVALS  =====
 def LongFlightArrivals(aircrafts, lista_aeropuertos):
     vuelos_largos = []
 
@@ -342,6 +340,7 @@ def LongFlightArrivals(aircrafts, lista_aeropuertos):
 # FUNCIONES VERSION 4
 # -------------------------------------------------------
 
+# ===== LOAD DEPARTURES  =====
 def LoadDepartures(filename):
     # Carga el archivo de salidas y devuelve lista de Aircraft
     # Solo rellena: aircraft, company, destination, departure_time
@@ -374,7 +373,7 @@ def LoadDepartures(filename):
 
     return lista_departures
 
-
+# ===== MERGE MOVEMENTS  =====
 def MergeMovements(arrivals, departures):
     # Combina listas de llegadas y salidas por ID de avion
     # Si los tiempos son compatibles (llegada < salida) se fusionan
@@ -430,7 +429,7 @@ def MergeMovements(arrivals, departures):
 
     return merged
 
-
+# ===== NIGHT AIRCRAFT  =====
 def NightAircraft(aircrafts):
     # Devuelve lista de aviones que solo tienen salida (sin llegada)
     # Son los que pasaron la noche en el aeropuerto
@@ -450,4 +449,25 @@ def NightAircraft(aircrafts):
 
     return nocturnos
 
+# ===== DEPARTURES AFTER HOUR =====
+def DeparturesAfterHour(aircrafts, hour):
+    if len(aircrafts) == 0:
+        return 0
+    count = 0  # contador de vuelos que salen después de la hora indicada
+    i = 0
 
+    while i < len(aircrafts):
+        ac = aircrafts[i]
+        # cogemos aviones que tienen hora de salida registrada
+        if ac.departure_time != "":
+            # cogemos la primera parte de la hora ej 11:00, pues 11
+            hora_dep = int(ac.departure_time.split(":")[0])
+
+            # si la hora de salida es mayor a la hora indicada, contamos el vuelo
+            if hora_dep > hour:
+                count = count + 1
+
+        i = i + 1
+
+    # devolver el total
+    return count

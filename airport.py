@@ -17,7 +17,7 @@ def IsSchengenAirport(code):
         return False
 
     schengen_codes = ['LO', 'EB', 'LK', 'LC', 'EK', 'EE', 'EF', 'LF', 'ED', 'LG', 'EH', 'LH',
-                'BI', 'LI', 'EV', 'EY', 'EL', 'LM', 'EN', 'EP', 'LP', 'LZ', 'LJ', 'LE', 'ES', 'LS']
+                'BI', 'LI', 'EV', 'EY', 'EL', 'LM', 'EN', 'EP', 'LP', 'LZ', 'LJ', 'LE', 'ES', 'LS','GC']
 
     inicio = code[0:2]
     i=0
@@ -63,6 +63,7 @@ def ConvertirCordinadas(cord_str):
         decimal = decimal * -1
 
     return decimal
+
 # ===== LOAD AIRPORTS =====
 def LoadAirports(filename):
     lista_airports = []
@@ -158,7 +159,7 @@ def PlotAirports(airports):
         else:
             no = no + 1
 
-    fig, ax = plt.subplots(figsize=(5, 4))
+    fig, ax = plt.subplots(figsize=(6, 10))
 
     ax.bar(['Aeropuertos'], [si], label='Schengen', color='blue')
     ax.bar(['Aeropuertos'], [no], bottom=[si], label='No Schengen', color='red')
@@ -214,7 +215,6 @@ def MapAirports(airports):
 
         f.write("    <styleUrl>#" + estilo + "</styleUrl>\n")
         f.write("    <Point>\n")
-        # En KML el orden es: longitud, latitud
         f.write("      <coordinates>" + str(a.lon) + "," + str(a.lat) + ",0</coordinates>\n")
         f.write("    </Point>\n")
         f.write("  </Placemark>\n")
