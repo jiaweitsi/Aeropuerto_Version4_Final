@@ -448,26 +448,3 @@ def NightAircraft(aircrafts):
         i = i + 1
 
     return nocturnos
-
-# ===== DEPARTURES AFTER HOUR =====
-def DeparturesAfterHour(aircrafts, hour):
-    if len(aircrafts) == 0:
-        return 0
-    count = 0  # contador de vuelos que salen después de la hora indicada
-    i = 0
-
-    while i < len(aircrafts):
-        ac = aircrafts[i]
-        # cogemos aviones que tienen hora de salida registrada
-        if ac.departure_time != "":
-            # cogemos la primera parte de la hora ej 11:00, pues 11
-            hora_dep = int(ac.departure_time.split(":")[0])
-
-            # si la hora de salida es mayor a la hora indicada, contamos el vuelo
-            if hora_dep > hour:
-                count = count + 1
-
-        i = i + 1
-
-    # devolver el total
-    return count

@@ -350,27 +350,6 @@ def btn_reasignar_gate_click():
         "Gate reasignado correctamente.\nAvión: " + aircraft_id +
         "\nNuevo Gate: " + nuevo_gate_nombre)
 
-def btn_salidas_despues_hora_click():
-    if len(lista_vuelos) == 0:
-        messagebox.showwarning("Aviso", "Carga los vuelos primero")
-        return
-    texto = entrada_hora_salidas.get().strip()
-    if texto == "":
-        messagebox.showerror("Error", "Introduce una hora (0-23)")
-        return
-    try:
-        hour = int(texto)
-        if hour < 0 or hour > 23:
-            messagebox.showerror("Error", "La hora debe estar entre 0 y 23")
-            return
-    except ValueError:
-        messagebox.showerror("Error", "Introduce un número entero entre 0 y 23")
-        return
-
-    resultado = DeparturesAfterHour(lista_vuelos, hour)
-    caja.delete(1.0, tk.END)
-    caja.insert(tk.END, "SALIDAS DESPUÉS DE LAS " + str(hour) + ":00\n")
-    caja.insert(tk.END, "Número total de vuelos: " + str(resultado) + "\n")
 
 # =====================================================================
 # FUNCIONES - SALIDAS Y DINÁMICA (VERSION 4)
@@ -737,13 +716,6 @@ for txt, cmd, sty in [
 
 ]:
     make_btn(vuelos_frame, txt, sty, cmd)
-fila_salidas = tk.Frame(vuelos_frame, bg=BG_PANEL)
-fila_salidas.grid(sticky="ew", pady=2, padx=4)
-tk.Label(fila_salidas, text="Hora (0-23):", bg=BG_PANEL, fg=C_LABEL_FG,
-         font=("Segoe UI", 8)).pack(side=tk.LEFT)
-entrada_hora_salidas = ttk.Entry(fila_salidas, width=5)
-entrada_hora_salidas.pack(side=tk.LEFT, padx=4)
-make_btn(vuelos_frame, "Salidas después de hora", "VU.TButton", btn_salidas_despues_hora_click)
 
 # GATES
 gates_frame = make_section(left_panel, "  🚪  Gestión de Gates", row_idx); row_idx += 1
